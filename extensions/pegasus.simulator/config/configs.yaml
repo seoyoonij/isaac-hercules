@@ -1,0 +1,38 @@
+ardupilot_default_airframe: gazebo-iris
+# Update this path after cloning/building ArduPilot (see README).
+ardupilot_dir: /home/nikolaos/workspaces/ardupilot
+px4_default_airframe: gazebo-classic_iris
+px4_dir: /path/to/PX4-Autopilot
+cesium_fallback_ground:
+  collision_surface: plane
+  enabled: false
+  half_extent_m: 8000.0
+  height_offset_m: 1.0
+  local_up_axis: Z
+  prim_path: /World/environment/CesiumFallbackGround
+  thickness_m: 0.2
+cesium_globe_anchor:
+  enabled: false
+cesium_ion_access_token: ""
+cesium_tileset_preset: google_photo
+cesium_tile_collision:
+  approximation: mesh
+  collision_pass_retries: 4
+  disable_fog_culling_for_physics: true
+  disable_frustum_culling_for_physics: true
+  disable_geometry_pool_for_physics: true
+  enabled: false
+  log_hierarchy_scales: false
+  max_meshes: 800
+  post_reparent_settle_frames: 32
+  pre_reparent_settle_frames: 48
+  reparent_under_world_environment: true
+  retry_settle_frames: 90
+  settle_frames: 180
+  tilesets_parent_path: /World/environment/cesium
+drone_spawn:
+  height_above_ground_m: 0.1
+global_coordinates:
+  latitude: 0.0
+  longitude: 0.0
+  altitude: 0.0
