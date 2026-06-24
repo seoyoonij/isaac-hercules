@@ -35,7 +35,7 @@
 
 5. Launch IsaacSim fixed-wing example standalone
     Launch with Hercules example
-    ``cd C:\Hercules_Isaac``
+    ``cd C:\Hercules_workspace\isaac-hercules\``
     ``C:\isaac-sim\python.bat examples\21_ardupilot_hercules_exp.py``
 
     (legacy: standard fixedwing

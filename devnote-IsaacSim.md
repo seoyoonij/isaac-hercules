@@ -55,18 +55,21 @@
 
 
 # Launching with Hercules files
+## Setting up
 1. Intially, IsaacSim was installed on Windows. It has ``python.bat``
 2. Hercules setup.sh was written for Linux host. When prompting Isaac Sim install directory, it looks for ``python.sh``
 3. Thus during initial setup,  
     (Cygwin64 terminal)
-    `` /cygdrive/c/Hercules_Isaac``
+    `` /cygdrive/c/Hercules_workspace/isaac-hercules``
     ``$ ./setup.sh ``
-    create a dummy file just for setup (When running sim on Windows, batch execution will look for ``python.bat`` anyways) so 
+    and if needed, ``sed -i 's/\r$//' /cygdrive/c/Hercules_workspace/isaac-hercules/setup.sh`` to convert Windows-style to Linux-style.
+
+    Then create a dummy file just for setup (When running sim on Windows, batch execution will look for ``python.bat`` anyways) so (Cygwin64 terminal)
     ``touch /cygdrive/c/isaac-sim/python.sh``
     ``chmod +x /cygdrive/c/isaac-sim/python.sh``
 4. Then in setup, 
     "Enter Isaac Sim install directory [/home/crrl/isaacsim]:"  ``/cygdrive/c/isaac-sim``
-    "Enter ArduPilot source directory [/home/crrl/ardupilot]:" /cygdrive/c/ardupilot_workspace/ardupilot
+    "Enter ArduPilot source directory [/home/crrl/ardupilot]:" ``/cygdrive/c/ardupilot_workspace/ardupilot``
 
 5. Since Isaac Sim is running in Windows in this case, manually open ``.env.local`` and inject the paths in Windows syntax.
     ```
@@ -90,12 +93,13 @@
         p_str = str(p)
         if p_str not in sys.path:
             sys.path.insert(0, p_str)
-
     ```
 
 7. Launch IsaacSim using Hercules
-    ``cd C:\Hercules_Isaac``
+    ``cd C:\Hercules_workspace\isaac-hercules``
     ``C:\isaac-sim\python.bat examples\21_ardupilot_hercules_exp.py``
     n.b. IsaacSim tries autolaunching ArduPilot, crashes on Windows' os.setsid error, abandons auto-launch, then proceeds with main loop anyway.
 
+## Execution
+Follow guidline in devnote-ArduPilot.md ##Execution
     

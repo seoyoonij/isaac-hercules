@@ -1,0 +1,6 @@
+.env.local
+__pycache__/
+*.pyc
+Thumbs.db
+ehthumbs.db
+Desktop.ini

@@ -1,6 +1,6 @@
 ardupilot_default_airframe: gazebo-iris
 # Update this path after cloning/building ArduPilot (see README).
-ardupilot_dir: /home/nikolaos/workspaces/ardupilot
+ardupilot_dir: /cygdrive/c/ardupilot_workspace/ardupilot
 px4_default_airframe: gazebo-classic_iris
 px4_dir: /path/to/PX4-Autopilot
 cesium_fallback_ground:
