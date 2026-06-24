@@ -21,6 +21,19 @@ simulation_app = SimulationApp({"headless": False})
 import omni.timeline
 from omni.isaac.core.world import World
 
+# Ensure local extension sources are imported before any installed pegasus package
+from pathlib import Path
+import sys
+repo_root = Path(__file__).resolve().parents[1]
+utils_dir = Path(__file__).resolve().parent / "utils"
+uav_extensions = repo_root / "extensions"
+uav_simulator = uav_extensions / "pegasus.simulator"
+
+for p in (utils_dir, uav_extensions, uav_simulator):
+    p_str = str(p)
+    if p_str not in sys.path:
+        sys.path.insert(0, p_str)
+
 # Import the Pegasus API for simulating vehicles
 from pegasus.simulator.params import SIMULATION_ENVIRONMENTS
 from pegasus.simulator.logic.backends.ardupilot_mavlink_backend import (
