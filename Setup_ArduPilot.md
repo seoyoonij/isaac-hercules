@@ -57,7 +57,7 @@ n.b.
     - udpcl://192.168.1.255:14550
     - serial:com4:115200
 ----
-
+(example)
 # Sending commands (MissionPlanner GUI)
 1. Parameter config for VTOL SITL: 
     - bypass failsafe: Config/ Full Parameter List/ THR_FAILSAFE set to 0 (disable) > Write params
@@ -71,5 +71,4 @@ n.b.
     - right-click on satellite map > Fly to (or Takeoff) > set altitude > initiate flight
     - Expectation: Loiter around waypoint
 
----
 

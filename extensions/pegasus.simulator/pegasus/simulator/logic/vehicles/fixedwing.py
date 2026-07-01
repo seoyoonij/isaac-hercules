@@ -103,6 +103,16 @@ class FixedWingConfig:
         self.Cm_q = -8.0       # Pitch damping due to pitch rate
 
         # ============================================
+        # PROPWASH OVER ELEVONS
+        # ============================================
+        # Assumption: Full elevon area is inside propwash. Not modelling with flat-plate segments
+        # Control effectiveness scaels with throttle:
+        # effectiveness = base * (1 + propwash_gain * throttle)
+        self.propwash_gain = 2.0
+        self.propwash_max_scale = 4.0
+        self.propwash_log = True
+
+        # ============================================
         # CONTROL SURFACE DERIVATIVES
         # ============================================
         # Elevator effectiveness (pitch control)
@@ -220,6 +230,7 @@ class FixedWing(Vehicle):
         self._config = config
         
         # Propeller configuration
+        # TODO: verify if same for all three props
         self._prop_max_thrust = config.prop_max_thrust
         self._prop_max_rpm = config.prop_max_rpm
         self._prop_thrust_coef = config.prop_thrust_coefficient
@@ -249,6 +260,12 @@ class FixedWing(Vehicle):
         self._Cn_p = config.Cn_p
         self._Cn_r = config.Cn_r
         self._Cm_q = config.Cm_q
+
+        # Propwash tuning
+        self._propwash_gain = float(config.propwash_gain)
+        self._propwash_max_scale = float(config.propwash_max_scale)
+        self._propwash_log = bool(config.propwash_log)
+        self._last_propwash_scale = 1.0 # ?
         
         # Control surface derivatives
         self._CL_elevator = config.CL_elevator
@@ -631,20 +648,38 @@ class FixedWing(Vehicle):
     def _calculate_propeller_thrust(self) -> float:
         """
         Calculates thrust force from propeller based on throttle input
+        UPDATE: main prop + wing prop with differential yaw moments
         
         Returns:
             float: Thrust force in Newtons (body frame X-axis)
         """
-        # RPM from throttle
-        rpm = self._throttle * self._prop_max_rpm
+        # # (Legacy- general throttle)
+        # # RPM from throttle
+        # rpm = self._throttle * self._prop_max_rpm
+        # # Thrust = coefficient * RPM^2
+        # thrust = self._prop_thrust_coef * (rpm ** 2)
+        # # Limit to maximum thrust
+        # thrust = np.clip(thrust, 0.0, self._prop_max_thrust)
+        # return np.array([thrust, 0, 0])
         
-        # Thrust = coefficient * RPM^2
-        thrust = self._prop_thrust_coef * (rpm ** 2)
-        
-        # Limit to maximum thrust
-        thrust = np.clip(thrust, 0.0, self._prop_max_thrust)
-        
-        return np.array([thrust, 0, 0])
+        # Map ArduPilot's throttle channels
+        throttle_nose = self._throttle
+        throttle_wingL = self._throttle # placeholder; verify
+        throttle_wingR = self._throttle # placeholder; verify
+
+        # Physical thrust per motor 
+        # TODO: verify if prop_thrust_coef is same for all three
+        t_nose = self._prop_thrust_coef * (throttle_nose * self._prop_max_rpm) ** 2
+        t_wingL = self._prop_thrust_coef * (throttle_wingL * self._prop_max_rpm) ** 2
+        t_wingR = self._prop_thrust_coef * (throttle_wingR * self._prop_max_rpm) ** 2
+
+        # Sum total forward force
+        total_thrust = t_nose + t_wingL + t_wingR
+
+        # Differential thrust torque (verify equation)
+        yaw_moment_differential = (t_wingR - t_wingL) * self._wing_span / 2.0
+
+        return np.array([total_thrust, 0.0, 0.0]), np.array([0.0, 0.0, yaw_moment_differential]), t_wingL, t_wingR
 
     def _calculate_aerodynamics(self):
         """
@@ -698,11 +733,28 @@ class FixedWing(Vehicle):
         p_hat = p_rate * self._wing_span / (2.0 * V)
         q_hat = q_rate * self._chord / (2.0 * V)
         r_hat = r_rate * self._wing_span / (2.0 * V)
+
+        # Propwash model
+        # Scales only control-derivative terms 
+        thr = float(np.clip(self._throttle, 0.0, 1.0))
+        propwash_scale = 1.0 + self._propwash_gain * thr
+        propwash_scale = np.clip(propwash_scale, 1.0, self._propwash_max_scale)
+        self._last_propwash_scale = propwash_scale
+
+        if self._propwash_log:
+            carb.log_info(
+                f"Propwash scale={propwash_scale:.3f} (throttle={thr:.3f}, gain={self._propwash_gain:.3f})"
+            )
+        
+        # Effective control derivatives under propwash
+        CL_elevator_eff = self._CL_elevator * propwash_scale
+        Cm_elevator_eff = self._Cm_elevator * propwash_scale
+        Cl_aileron_eff = self._Cl_aileron * propwash_scale
         
         # ==========================================
-        # LIFT COEFFICIENT
+        # LIFT COEFFICIENT + propwash-scaled effect
         # ==========================================
-        CL_raw = self._CL_0 + self._CL_alpha * alpha + self._CL_elevator * self._elevator
+        CL_raw = self._CL_0 + self._CL_alpha * alpha + CL_elevator_eff * self._elevator
         CL = np.clip(CL_raw, self._CL_min, self._CL_max)  # Stall limits
         carb.log_info(f"Coeff Lift (CL): {CL:.4f} (Raw: {CL_raw:.4f}, Control: {self._elevator})")
         
@@ -721,19 +773,19 @@ class FixedWing(Vehicle):
         # ==========================================
         # MOMENT COEFFICIENTS
         # ==========================================
-        # Roll moment (around X-axis)
+        # Roll moment (around X-axis) + propwash-scaled effect
         Cl = (
             self._Cl_beta * beta
-            + self._Cl_aileron * self._aileron
+            + Cl_aileron_eff * self._aileron
             + self._Cl_p * p_hat
             + self._Cl_r * r_hat
         )
         
-        # Pitch moment (around Y-axis)
+        # Pitch moment (around Y-axis) + propwash-scaled effect
         Cm = (
             self._Cm_0
             + self._Cm_alpha * alpha
-            + self._Cm_elevator * self._elevator
+            + Cm_elevator_eff * self._elevator
             + self._Cm_q * q_hat
         )
         

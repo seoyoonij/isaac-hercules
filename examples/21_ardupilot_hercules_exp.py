@@ -91,7 +91,7 @@ class FixedWingApp:
         # Hercules propulsion settings
         config.prop_max_thrust = 111.2
         config.prop_max_rpm = 3110.0
-        config.prop_thrust_coefficient = 1.058e-5
+        config.prop_thrust_coefficient = 1.058e-5 # verify if same for all three
         config.prop_rotation_dir = 1
         
         # Hercules mass/geometry settings
@@ -109,6 +109,11 @@ class FixedWingApp:
         config.CD_0 = 0.07
         config.CD_alpha = 0.5
         config.CD_alpha2 = 2.1
+
+        # propwash tuning
+        config.propwash_gain = float(os.environ.get("PEGASUS_FW_PROPWASH_GAIN", "2.0"))
+        config.propwash_max_scale = float(os.environ.get("PEGASUS_FW_PROPWASH_MAX_SCALE", "4.0"))
+        config.propwash_log = os.environ.get("PEGASUS_FW_PROPWASH_LOG", "1").strip() not in ("0", "false", "False")
         
         # Hercules pitch stability/control
         config.Cm_0 = 0.05
